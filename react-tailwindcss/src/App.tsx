@@ -6,15 +6,10 @@ interface BoardProps {
   squareState: string[];
   onPlay: (nextSquares: string[]) => void;
 }
-function Board({ xIsNext, squareState, onPlay }: BoardProps): JSX.Element {
-
-
-  useEffect(() => {
-    if (isBoardFull(squareState) && !calculateWinner(squareState)) {
-
-    }
-  }, [squareState]);
-
+function Board({ xIsNext, squareState, onPlay}: BoardProps): JSX.Element {
+  const winnerInfo = calculateWinner(squareState);
+  const winnergame = winnerInfo?.player;
+  const winningLine = winnerInfo?.line ?? [];
 
   function handleClick(i: number) {
     if (squareState[i] || calculateWinner(squareState)) {
@@ -31,7 +26,7 @@ function Board({ xIsNext, squareState, onPlay }: BoardProps): JSX.Element {
     onPlay(nextSquares);
 
   }
-  const winner = calculateWinner(squareState);
+ 
 
 
 
@@ -40,26 +35,26 @@ function Board({ xIsNext, squareState, onPlay }: BoardProps): JSX.Element {
 
     <div className="flex ">
       <div>
-        <Square value={squareState[0]} onSquareClick={() => handleClick(0)} />
-        <Square value={squareState[1]} onSquareClick={() => handleClick(1)} />
-        <Square value={squareState[2]} onSquareClick={() => handleClick(2)} />
+        <Square value={squareState[0]} highlight={winningLine.includes(0)} onSquareClick={() => handleClick(0)} />
+        <Square value={squareState[1]} highlight={winningLine.includes(1)} onSquareClick={() => handleClick(1)} />
+        <Square value={squareState[2]} highlight={winningLine.includes(2)} onSquareClick={() => handleClick(2)} />
       </div>
       <div>
-        <Square value={squareState[3]} onSquareClick={() => handleClick(3)} />
-        <Square value={squareState[4]} onSquareClick={() => handleClick(4)} />
-        <Square value={squareState[5]} onSquareClick={() => handleClick(5)} />
+        <Square value={squareState[3]} highlight={winningLine.includes(3)} onSquareClick={() => handleClick(3)} />
+        <Square value={squareState[4]} highlight={winningLine.includes(4)} onSquareClick={() => handleClick(4)} />
+        <Square value={squareState[5]} highlight={winningLine.includes(5)} onSquareClick={() => handleClick(5)} />
       </div>
       <div>
-        <Square value={squareState[6]} onSquareClick={() => handleClick(6)} />
-        <Square value={squareState[7]} onSquareClick={() => handleClick(7)} />
-        <Square value={squareState[8]} onSquareClick={() => handleClick(8)} />
+        <Square value={squareState[6]} highlight={winningLine.includes(6)} onSquareClick={() => handleClick(6)} />
+        <Square value={squareState[7]} highlight={winningLine.includes(7)} onSquareClick={() => handleClick(7)} />
+        <Square value={squareState[8]} highlight={winningLine.includes(8)} onSquareClick={() => handleClick(8)} />
       </div>
 
     </div>
     {
-      winner ? (
+      winnergame ? (
         <div className="mt-4 text-2xl font-bold">
-          Le gagnant est : {winner}
+          Le gagnant est : {winnergame}
         </div>
       ) : isBoardFull(squareState) ? (
         <div className="mt-4 text-2xl font-bold">
@@ -73,34 +68,6 @@ function Board({ xIsNext, squareState, onPlay }: BoardProps): JSX.Element {
     }
   </div>
 }
-function calculateWinner(squares: string[]): string | null {
-  const lines = [
-    [0, 1, 2],
-    [3, 4, 5],
-    [6, 7, 8],
-    [0, 3, 6],
-    [1, 4, 7],
-    [2, 5, 8],
-    [0, 4, 8],
-    [2, 4, 6]
-  ];
-  for (let i = 0; i < lines.length; i++) {
-    const [a, b, c] = lines[i];
-    if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-      return squares[a];
-    }
-  }
-  return null;
-}
-function isBoardFull(array: string[]): boolean {
-  return array.every(cell => cell); // retourne true si toutes les cases sont "truthy"
-}
-
-
-
-
-
-
 
 export default function App(): JSX.Element {
 
@@ -113,6 +80,14 @@ export default function App(): JSX.Element {
     setHistory(nextHistory);
     setCurrentMove(nextHistory.length - 1);
   }
+  useEffect(() => {
+  if (isBoardFull(currentSquares) || calculateWinner(currentSquares)) {
+    setTimeout(() => {
+      setHistory([Array(9).fill('')]);
+      setCurrentMove(0);
+    }, 1500); 
+  }
+}, [currentSquares]);
   // la fonction jumpTo permet de revenir à un coup précédent et de mettre à jour l'état du jeu
 
   function jumpTo(nextMove: number) {
@@ -144,8 +119,30 @@ export default function App(): JSX.Element {
       <h1 className="text-2xl font-bold mb-4">Jeu de Tic Tac Toe</h1>
       <h2 className="mb-4 text-2xl font-medium ">Joueur actuel: {xIsNext ? 'X' : 'O'}</h2>
     </div>
-    <Board xIsNext={xIsNext} squareState={currentSquares} onPlay={handlePlay} />
+    <Board xIsNext={xIsNext} squareState={currentSquares} onPlay={handlePlay}/>
     <h2>Historique des coups</h2>
     <ol>{moves}</ol>
   </div>
+}
+function calculateWinner(squares: string[]): {player: string, line: number[]} | null {
+  const lines = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6]
+  ];
+  for (let i = 0; i < lines.length; i++) {
+    const [a, b, c] = lines[i];
+    if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
+      return { player: squares[a], line: [a, b, c] };
+    }
+  }
+  return null;
+}
+function isBoardFull(array: string[]): boolean {
+  return array.every(cell => cell); // retourne true si toutes les cases sont "truthy"
 }
